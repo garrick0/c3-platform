@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  bff:
+    build:
+      context: ../c3-bff
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - HOST=0.0.0.0
+      - CORS_ORIGIN=http://localhost:5173
+    volumes:
+      - ../c3-bff:/app
+      - /app/node_modules
+    command: npm run dev
+
+  web:
+    build:
+      context: ../c3-web
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    volumes:
+      - ../c3-web:/app
+      - /app/node_modules
+    command: npm run dev
+    depends_on:
+      - bff

@@ -1,0 +1,68 @@
+{
+  "folders": [
+    {
+      "name": "🏗️ Platform",
+      "path": "."
+    },
+    {
+      "name": "📦 Shared",
+      "path": "../c3-shared"
+    },
+    {
+      "name": "📦 Parsing",
+      "path": "../c3-parsing"
+    },
+    {
+      "name": "📦 Compliance",
+      "path": "../c3-compliance"
+    },
+    {
+      "name": "📦 Projection",
+      "path": "../c3-projection"
+    },
+    {
+      "name": "📦 Discovery",
+      "path": "../c3-discovery"
+    },
+    {
+      "name": "📦 Wiring",
+      "path": "../c3-wiring"
+    },
+    {
+      "name": "🖥️ CLI",
+      "path": "../c3-cli"
+    },
+    {
+      "name": "🌐 BFF",
+      "path": "../c3-bff"
+    },
+    {
+      "name": "🎨 Web",
+      "path": "../c3-web"
+    }
+  ],
+  "settings": {
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/.git": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/package-lock.json": true
+    },
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss"
+    ]
+  }
+}
