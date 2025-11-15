@@ -33,7 +33,11 @@ echo "🏗️  Building all packages..."
 # Test first (optional - may not have tests yet)
 echo ""
 echo "🧪 Testing all packages..."
-./scripts/test-all.sh || echo "⚠️  Some tests failed or missing, continuing anyway..."
+if ./scripts/test-all.sh 2>&1 | grep -q "✅ All tests passed"; then
+  echo "✅ All tests passed"
+else
+  echo "⚠️  Some tests failed or missing, continuing anyway..."
+fi
 
 # Publish in dependency order
 repos=(
@@ -65,11 +69,17 @@ for repo in "${repos[@]}"; do
     if npm view "$name@$version" > /dev/null 2>&1; then
       echo "⏭️  $name@$version already published, skipping"
     else
-      if npm publish; then
+      echo "📤 Publishing $name@$version..."
+      if npm publish 2>&1 | tail -1 | grep -q "^+"; then
         echo "✅ Published $name@$version"
       else
-        echo "❌ Failed to publish $name"
-        failed+=($repo)
+        # Check if it actually published despite errors
+        if npm view "$name@$version" > /dev/null 2>&1; then
+          echo "✅ Published $name@$version (with warnings)"
+        else
+          echo "❌ Failed to publish $name"
+          failed+=($repo)
+        fi
       fi
     fi
 
