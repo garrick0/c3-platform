@@ -49,8 +49,7 @@ All C3 repositories are siblings in `~/dev/`:
 
 ### Development
 
-- **`./scripts/setup-dev.sh`** - Complete setup (intelligently handles clone + install)
-- **`./scripts/clone-all.sh`** - Clone all C3 repositories (called by setup-dev.sh)
+- **`./scripts/setup-dev.sh`** - Complete setup (clone + install with smart detection)
 - **`./scripts/link-all.sh`** - Link packages for local development
 - **`./scripts/build-all.sh`** - Build all packages
 - **`./scripts/test-all.sh`** - Test all packages
@@ -58,10 +57,6 @@ All C3 repositories are siblings in `~/dev/`:
 ### Publishing
 
 - **`./scripts/publish-all.sh`** - Publish all packages to NPM
-
-### Utilities
-
-- **`./scripts/extract-context.sh`** - Extract new contexts from monorepo
 
 ## Local Development Workflow
 

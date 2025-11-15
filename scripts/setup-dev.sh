@@ -38,15 +38,25 @@ if [ $existing_count -gt 0 ]; then
 
   if [ "$choice" = "2" ]; then
     echo ""
-    echo "📥 Cloning repositories..."
-    ./scripts/clone-all.sh
+    echo "📥 Cloning missing repositories..."
+    for repo in "${repos[@]}"; do
+      if [ -d "../$repo" ]; then
+        echo "⏭️  Skipping $repo (already exists)"
+      else
+        echo "📥 Cloning $repo..."
+        gh repo clone garrick0/$repo ../$repo
+      fi
+    done
   else
     echo ""
     echo "⏭️  Skipping clone step (repos already exist)"
   fi
 else
   echo "📥 No existing repositories found. Cloning all..."
-  ./scripts/clone-all.sh
+  for repo in "${repos[@]}"; do
+    echo "📥 Cloning $repo..."
+    gh repo clone garrick0/$repo ../$repo
+  done
 fi
 
 echo ""
