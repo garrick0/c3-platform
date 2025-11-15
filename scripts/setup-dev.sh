@@ -3,11 +3,9 @@
 set -e
 
 echo "🚀 Setting up C3 development environment..."
+echo ""
 
-# Clone all repositories
-./scripts/clone-all.sh
-
-# Install dependencies in all repos
+# Check if repos already exist
 repos=(
   "c3-shared"
   "c3-wiring"
@@ -20,9 +18,43 @@ repos=(
   "c3-web"
 )
 
+existing_count=0
 for repo in "${repos[@]}"; do
   if [ -d "../$repo" ]; then
-    echo "📦 Installing dependencies in $repo..."
+    ((existing_count++))
+  fi
+done
+
+# If repos exist, ask if we should clone
+if [ $existing_count -gt 0 ]; then
+  echo "ℹ️  Found $existing_count existing repositories in ~/dev/"
+  echo ""
+  echo "Options:"
+  echo "  1. Skip cloning, just install dependencies (recommended if repos exist)"
+  echo "  2. Run clone-all.sh anyway (will skip existing repos)"
+  echo ""
+  read -p "Choose [1/2] (default: 1): " choice
+  choice=${choice:-1}
+
+  if [ "$choice" = "2" ]; then
+    echo ""
+    echo "📥 Cloning repositories..."
+    ./scripts/clone-all.sh
+  else
+    echo ""
+    echo "⏭️  Skipping clone step (repos already exist)"
+  fi
+else
+  echo "📥 No existing repositories found. Cloning all..."
+  ./scripts/clone-all.sh
+fi
+
+echo ""
+echo "📦 Installing dependencies in all repositories..."
+
+for repo in "${repos[@]}"; do
+  if [ -d "../$repo" ]; then
+    echo "📦 Installing in $repo..."
     cd ../$repo
     npm install
     cd ../c3-platform

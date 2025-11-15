@@ -17,9 +17,10 @@ cd c3-platform
 ```
 
 This will:
-- Clone all 9 C3 repositories
+- Check if repos already exist
+- Clone missing repositories (or skip if all exist)
 - Install dependencies in each
-- Take ~5 minutes
+- Take ~5-10 minutes (or ~2 minutes if repos exist)
 
 ### 3. Link Packages
 
