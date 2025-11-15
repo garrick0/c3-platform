@@ -20,6 +20,11 @@ fi
 
 echo "✅ Logged in to NPM as: $(npm whoami)"
 
+# Link packages first (for local builds)
+echo ""
+echo "🔗 Linking all packages for building..."
+./scripts/link-all.sh
+
 # Build first
 echo ""
 echo "🏗️  Building all packages..."
