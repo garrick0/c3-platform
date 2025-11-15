@@ -15,18 +15,49 @@ else
   exit 1
 fi
 
-# Link contexts
-for repo in c3-parsing c3-compliance c3-projection c3-discovery; do
-  if [ -d "../$repo" ]; then
-    echo "🔗 Linking $repo..."
-    cd ../$repo
-    npm link c3-shared
-    npm link
-    cd ../c3-platform
-  else
-    echo "⚠️  Skipping $repo (not found)"
-  fi
-done
+# Link parsing (depends on shared)
+if [ -d "../c3-parsing" ]; then
+  echo "🔗 Linking c3-parsing..."
+  cd ../c3-parsing
+  npm link c3-shared
+  npm link
+  cd ../c3-platform
+else
+  echo "⚠️  Skipping c3-parsing (not found)"
+fi
+
+# Link compliance (depends on shared + parsing)
+if [ -d "../c3-compliance" ]; then
+  echo "🔗 Linking c3-compliance..."
+  cd ../c3-compliance
+  npm link c3-shared c3-parsing
+  npm link
+  cd ../c3-platform
+else
+  echo "⚠️  Skipping c3-compliance (not found)"
+fi
+
+# Link projection (depends on shared + parsing)
+if [ -d "../c3-projection" ]; then
+  echo "🔗 Linking c3-projection..."
+  cd ../c3-projection
+  npm link c3-shared c3-parsing
+  npm link
+  cd ../c3-platform
+else
+  echo "⚠️  Skipping c3-projection (not found)"
+fi
+
+# Link discovery (depends on shared + parsing + compliance)
+if [ -d "../c3-discovery" ]; then
+  echo "🔗 Linking c3-discovery..."
+  cd ../c3-discovery
+  npm link c3-shared c3-parsing c3-compliance
+  npm link
+  cd ../c3-platform
+else
+  echo "⚠️  Skipping c3-discovery (not found)"
+fi
 
 # Link wiring
 if [ -d "../c3-wiring" ]; then
