@@ -6,42 +6,36 @@ This repository contains scripts, documentation, and CI/CD configurations for ma
 
 ## Quick Start
 
-### 1. Clone Platform
+### Scenario A: First Time Setup (Fresh Start)
 
 ```bash
 cd ~/dev
 gh repo clone garrick0/c3-platform
 cd c3-platform
-```
 
-### 2. Setup Development Environment
-
-```bash
+# Clone all repos + install dependencies
 ./scripts/setup-dev.sh
-```
 
-This will:
-- Clone all C3 repositories
-- Install dependencies in each repo
-
-### 3. Link Packages for Local Development
-
-```bash
+# Link packages for local development
 ./scripts/link-all.sh
-```
 
-This creates symlinks so changes in one package are immediately available to dependent packages.
-
-### 4. Build Everything
-
-```bash
+# Build everything
 ./scripts/build-all.sh
 ```
 
-### 5. Test Everything
+### Scenario B: Repos Already Exist (Post-Migration)
 
 ```bash
-./scripts/test-all.sh
+cd ~/dev/c3-platform
+
+# Just install dependencies (repos already cloned)
+./scripts/install-all.sh
+
+# Link packages for local development
+./scripts/link-all.sh
+
+# Build everything
+./scripts/build-all.sh
 ```
 
 ## Repository Structure
@@ -66,8 +60,9 @@ All C3 repositories are siblings in `~/dev/`:
 
 ### Development
 
-- **`./scripts/clone-all.sh`** - Clone all C3 repositories
-- **`./scripts/setup-dev.sh`** - Setup complete dev environment
+- **`./scripts/clone-all.sh`** - Clone all C3 repositories (first-time only)
+- **`./scripts/setup-dev.sh`** - Complete setup: clone + install (first-time only)
+- **`./scripts/install-all.sh`** - Install dependencies in existing repos
 - **`./scripts/link-all.sh`** - Link packages for local development
 - **`./scripts/build-all.sh`** - Build all packages
 - **`./scripts/test-all.sh`** - Test all packages
@@ -75,6 +70,10 @@ All C3 repositories are siblings in `~/dev/`:
 ### Publishing
 
 - **`./scripts/publish-all.sh`** - Publish all packages to NPM
+
+### Utilities
+
+- **`./scripts/extract-context.sh`** - Extract new contexts from monorepo
 
 ## Local Development Workflow
 
