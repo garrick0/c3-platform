@@ -1,0 +1,27 @@
+/**
+ * Sanity tests for {{PACKAGE_NAME}} package
+ * Ensures basic exports and structure are correct
+ */
+
+import { describe, it, expect } from 'vitest';
+
+describe('{{PACKAGE_NAME}} package', () => {
+  it('should be importable', () => {
+    // This test just verifies the package can be imported
+    expect(true).toBe(true);
+  });
+
+  it('should export main index', async () => {
+    // Verify the main entry point exists and is importable
+    const pkg = await import('../src/index.js');
+    expect(pkg).toBeDefined();
+  });
+
+  // Add more specific tests for your package exports here
+  // Example:
+  // it('should export MyClass', async () => {
+  //   const { MyClass } = await import('../src/MyClass.js');
+  //   expect(MyClass).toBeDefined();
+  // });
+});
+

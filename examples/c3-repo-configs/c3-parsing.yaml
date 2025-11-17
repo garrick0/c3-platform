@@ -1,0 +1,91 @@
+# C3 Repository Configuration
+# Repository: c3-parsing
+# Type: Domain Context
+
+name: c3-parsing
+version: "1.0"
+type: context
+layer: 1
+description: "Multi-source code analysis with unified property graph"
+
+dependencies:
+  c3-shared: "^0.1.0"
+
+exports:
+  useCases:
+    - ParseCodebase
+    - ParseFile
+    - GetPropertyGraph
+    - UpdateGraph
+    - ClearCache
+  
+  services:
+    - ParsingService
+    - GraphBuilder
+    - EdgeDetector
+  
+  entities:
+    - PropertyGraph
+    - Node
+    - Edge
+    - FileInfo
+  
+  types:
+    - Language
+    - NodeType
+    - EdgeType
+    - FilePath
+
+contracts:
+  - name: ParsingService
+    version: "2.0.0"
+    stability: stable
+    methods:
+      - parseFile
+      - parseDirectory
+      - parseCodebase
+    breaking-changes:
+      - version: "2.0.0"
+        description: "Switched to async parsing API"
+  
+  - name: PropertyGraph
+    version: "2.0.0"
+    stability: stable
+    methods:
+      - getNode
+      - getNodes
+      - getEdge
+      - getEdges
+      - addNode
+      - addEdge
+      - findNodesByType
+  
+  - name: GraphBuilder
+    version: "2.0.0"
+    stability: stable
+    methods:
+      - buildGraph
+      - updateGraph
+      - mergeGraphs
+
+tooling:
+  buildCommand: "tsup"
+  testCommand: "vitest run"
+  lintCommand: "eslint src"
+  devCommand: "tsup --watch"
+  
+  typescript:
+    version: "^5.3.3"
+    config: "tsconfig.json"
+  
+  testing:
+    framework: vitest
+    coverage: true
+    threshold: 85
+
+metadata:
+  owner: "Platform Team"
+  team: "Parsing"
+  status: active
+  documentation: "docs/API.md"
+

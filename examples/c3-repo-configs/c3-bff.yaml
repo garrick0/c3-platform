@@ -1,0 +1,74 @@
+# C3 Repository Configuration
+# Repository: c3-bff
+# Type: Application
+
+name: c3-bff
+version: "1.0"
+type: application
+layer: 4
+description: "Backend-for-frontend API for C3 platform"
+
+dependencies:
+  c3-shared: "^0.1.0"
+  c3-parsing: "^0.1.0"
+  c3-compliance: "^0.1.0"
+  c3-projection: "^0.1.0"
+  c3-discovery: "^0.1.0"
+  c3-wiring: "^0.1.0"
+
+exports:
+  # BFF doesn't export packages, but exposes REST API
+  api:
+    - "/api/parsing/*"
+    - "/api/compliance/*"
+    - "/api/projection/*"
+    - "/api/discovery/*"
+    - "/health"
+
+contracts:
+  - name: REST API
+    version: "1.0.0"
+    stability: stable
+    specification: "openapi.yaml"
+    endpoints:
+      - "POST /api/projection/analyze-modules"
+      - "GET /api/projection/analyses"
+      - "GET /api/projection/analyses/:id"
+      - "DELETE /api/projection/analyses/:id"
+      - "GET /api/projection/analyses/:id/export/:format"
+      - "POST /api/compliance/validate"
+      - "GET /health"
+
+tooling:
+  buildCommand: "tsc"
+  testCommand: "vitest run"
+  lintCommand: "eslint src"
+  devCommand: "tsx src/index.ts"
+  
+  typescript:
+    version: "^5.3.3"
+    config: "tsconfig.json"
+  
+  testing:
+    framework: vitest
+    coverage: true
+    threshold: 75
+
+runtime:
+  type: server
+  port: 3001
+  env:
+    - NODE_ENV
+    - PORT
+    - HOST
+    - CORS_ORIGIN
+  health-check: "/health"
+  startup-timeout: 30000
+
+metadata:
+  owner: "Platform Team"
+  team: "Backend"
+  status: active
+  documentation: "README.md"
+  openapi: "openapi.yaml"
+

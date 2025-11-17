@@ -1,0 +1,173 @@
+# Example: Automated Version Bump Workflow
+# Use this in: all repos
+# Location: .github/workflows/version-bump.yml
+
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+      prerelease_id:
+        description: 'Pre-release identifier (for prerelease only)'
+        required: false
+        type: string
+        default: 'dev'
+  repository_dispatch:
+    types: [version-bump]
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get current version
+        id: current
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Bump version
+        id: bump
+        run: |
+          BUMP_TYPE="${{ inputs.bump_type || github.event.client_payload.bump_type }}"
+          PRERELEASE_ID="${{ inputs.prerelease_id || github.event.client_payload.prerelease_id }}"
+          
+          if [ "$BUMP_TYPE" = "prerelease" ]; then
+            npm version prerelease --preid=$PRERELEASE_ID -m "chore: bump version to %s [skip ci]"
+          else
+            npm version $BUMP_TYPE -m "chore: bump version to %s [skip ci]"
+          fi
+          
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Push changes
+        run: |
+          git push origin main
+          git push --tags
+
+      - name: Create changelog entry
+        run: |
+          echo "## v${{ steps.bump.outputs.new_version }}" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "Released: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Changes" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          git log --oneline --pretty=format:"- %s (%h)" \
+            v${{ steps.current.outputs.version }}..HEAD >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          cat CHANGELOG.md.bak >> CHANGELOG.md || true
+
+      - name: Commit changelog
+        run: |
+          git add CHANGELOG.md
+          git commit -m "docs: update changelog for v${{ steps.bump.outputs.new_version }} [skip ci]" || true
+          git push origin main || true
+
+  update-dependents:
+    needs: bump-version
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repo:
+          - c3-parsing
+          - c3-compliance
+          - c3-projection
+          - c3-discovery
+          - c3-wiring
+          - c3-bff
+          - c3-cli
+      fail-fast: false
+    steps:
+      - name: Checkout dependent repo
+        uses: actions/checkout@v4
+        with:
+          repository: yourorg/${{ matrix.repo }}
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check if depends on this package
+        id: check
+        run: |
+          PACKAGE_NAME=$(echo ${{ github.repository }} | sed 's/.*\///')
+          if grep -q "\"$PACKAGE_NAME\"" package.json; then
+            echo "depends=true" >> $GITHUB_OUTPUT
+          else
+            echo "depends=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update dependency version
+        if: steps.check.outputs.depends == 'true'
+        run: |
+          PACKAGE_NAME=$(echo ${{ github.repository }} | sed 's/.*\///')
+          npm install $PACKAGE_NAME@${{ needs.bump-version.outputs.new_version }}
+
+      - name: Create pull request
+        if: steps.check.outputs.depends == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          commit-message: |
+            chore: update ${{ github.repository }} to v${{ needs.bump-version.outputs.new_version }}
+          title: |
+            chore: update ${{ github.repository }} to v${{ needs.bump-version.outputs.new_version }}
+          body: |
+            This PR updates `${{ github.repository }}` to version `v${{ needs.bump-version.outputs.new_version }}`.
+            
+            **Changes:**
+            - Updated `package.json` dependency
+            - Updated `package-lock.json`
+            
+            This was automatically generated by the version bump workflow.
+          branch: update-${{ github.repository }}-v${{ needs.bump-version.outputs.new_version }}
+          delete-branch: true
+
+  notify:
+    needs: [bump-version, update-dependents]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create summary
+        run: |
+          echo "# Version Bump Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**New Version:** v${{ needs.bump-version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Bump Type:** ${{ inputs.bump_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+

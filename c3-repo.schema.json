@@ -1,0 +1,192 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://c3-platform.dev/schemas/c3-repo.schema.json",
+  "title": "C3 Repository Configuration",
+  "description": "Schema for configuring C3 platform repositories",
+  "type": "object",
+  "required": ["name", "type", "layer", "dependencies", "tooling"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Repository name (e.g., c3-parsing)",
+      "pattern": "^c3-[a-z-]+$"
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "enum": ["1.0"]
+    },
+    "type": {
+      "type": "string",
+      "description": "Type of repository in the C3 architecture",
+      "enum": [
+        "foundation",
+        "context",
+        "integration",
+        "application",
+        "orchestration"
+      ]
+    },
+    "layer": {
+      "type": "integer",
+      "description": "Architectural layer (0=foundation, 4=application)",
+      "minimum": 0,
+      "maximum": 4
+    },
+    "description": {
+      "type": "string",
+      "description": "Repository description"
+    },
+    "dependencies": {
+      "type": "object",
+      "description": "NPM dependencies on other C3 packages",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[\\^~]?\\d+\\.\\d+\\.\\d+$"
+      }
+    },
+    "exports": {
+      "type": "object",
+      "description": "Public API exported by this package",
+      "properties": {
+        "useCases": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "services": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "entities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "types": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "contracts": {
+      "type": "array",
+      "description": "API contracts exposed by this package",
+      "items": {
+        "type": "object",
+        "required": ["name", "version", "stability"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Contract name (e.g., ParsingService)"
+          },
+          "version": {
+            "type": "string",
+            "description": "Contract version (semver)",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$"
+          },
+          "stability": {
+            "type": "string",
+            "enum": ["experimental", "beta", "stable", "deprecated"]
+          },
+          "methods": {
+            "type": "array",
+            "description": "Public methods in the contract",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "tooling": {
+      "type": "object",
+      "description": "Tooling configuration",
+      "required": ["buildCommand", "testCommand"],
+      "properties": {
+        "buildCommand": {
+          "type": "string",
+          "description": "Command to build the package"
+        },
+        "testCommand": {
+          "type": "string",
+          "description": "Command to run tests"
+        },
+        "lintCommand": {
+          "type": "string",
+          "description": "Command to lint code"
+        },
+        "devCommand": {
+          "type": "string",
+          "description": "Command to run in development mode"
+        },
+        "typescript": {
+          "type": "object",
+          "properties": {
+            "version": { "type": "string" },
+            "config": { "type": "string" }
+          }
+        },
+        "testing": {
+          "type": "object",
+          "properties": {
+            "framework": {
+              "type": "string",
+              "enum": ["vitest", "jest", "none"]
+            },
+            "coverage": {
+              "type": "boolean"
+            },
+            "threshold": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "description": "Runtime configuration (for applications only)",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["cli", "server", "spa"]
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 65535
+        },
+        "env": {
+          "type": "array",
+          "description": "Required environment variables",
+          "items": { "type": "string" }
+        },
+        "proxies": {
+          "type": "array",
+          "description": "Proxy configurations (for SPAs)",
+          "items": {
+            "type": "object",
+            "required": ["path", "target"],
+            "properties": {
+              "path": { "type": "string" },
+              "target": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata",
+      "properties": {
+        "owner": { "type": "string" },
+        "team": { "type": "string" },
+        "documentation": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["active", "maintenance", "deprecated"]
+        }
+      }
+    }
+  }
+}
+

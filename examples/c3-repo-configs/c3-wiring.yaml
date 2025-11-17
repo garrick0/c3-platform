@@ -1,0 +1,75 @@
+# C3 Repository Configuration
+# Repository: c3-wiring
+# Type: Integration Layer
+
+name: c3-wiring
+version: "1.0"
+type: integration
+layer: 3
+description: "Dependency injection and context wiring for C3"
+
+dependencies:
+  c3-shared: "^0.1.0"
+  c3-parsing: "^0.1.0"
+  c3-compliance: "^0.1.0"
+  c3-projection: "^0.1.0"
+  c3-discovery: "^0.1.0"
+
+exports:
+  services:
+    - Container
+    - bootstrap
+    - getContainer
+    - resetContainer
+  
+  modules:
+    - registerParsingContext
+    - registerComplianceContext
+    - registerProjectionContext
+    - registerDiscoveryContext
+  
+  tokens:
+    - TOKENS (dependency injection tokens)
+
+contracts:
+  - name: Container
+    version: "1.0.0"
+    stability: stable
+    methods:
+      - register
+      - registerAsync
+      - registerSingleton
+      - registerAsyncSingleton
+      - registerInstance
+      - get
+      - getAsync
+      - has
+      - clear
+  
+  - name: bootstrap
+    version: "1.0.0"
+    stability: stable
+    description: "Bootstrap application with fully-wired container"
+    returns: "Promise<Container>"
+
+tooling:
+  buildCommand: "tsc"
+  testCommand: "vitest run"
+  devCommand: "tsc --watch"
+  
+  typescript:
+    version: "^5.3.3"
+    config: "tsconfig.json"
+  
+  testing:
+    framework: vitest
+    coverage: true
+    threshold: 70
+
+metadata:
+  owner: "Platform Team"
+  team: "Core"
+  status: active
+  documentation: "README.md"
+  notes: "Aggregates all contexts and provides DI container"
+

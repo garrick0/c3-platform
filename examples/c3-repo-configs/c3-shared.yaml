@@ -1,0 +1,84 @@
+# C3 Repository Configuration
+# Repository: c3-shared
+# Type: Foundation Layer
+
+name: c3-shared
+version: "1.0"
+type: foundation
+layer: 0
+description: "Core domain abstractions and infrastructure for C3"
+
+dependencies: {}
+
+exports:
+  # Domain building blocks
+  entities:
+    - Entity
+    - AggregateRoot
+    - ValueObject
+  
+  # Functional primitives  
+  types:
+    - Result
+    - Either
+    - Specification
+  
+  # Core abstractions
+  services:
+    - ConfigurationService
+    - PresetManager
+    - Logger
+    - Cache
+    - Metrics
+
+contracts:
+  - name: Logger
+    version: "1.0.0"
+    stability: stable
+    methods:
+      - debug
+      - info
+      - warn
+      - error
+      
+  - name: ConfigurationService
+    version: "1.0.0"
+    stability: stable
+    methods:
+      - load
+      - validate
+      - watch
+      - get
+      - set
+
+  - name: Cache
+    version: "1.0.0"
+    stability: stable
+    methods:
+      - get
+      - set
+      - has
+      - delete
+      - clear
+
+tooling:
+  buildCommand: "tsc"
+  testCommand: "vitest run"
+  lintCommand: "eslint src"
+  devCommand: "tsc --watch"
+  
+  typescript:
+    version: "^5.3.3"
+    config: "tsconfig.json"
+  
+  testing:
+    framework: vitest
+    coverage: true
+    threshold: 80
+
+metadata:
+  owner: "Platform Team"
+  team: "Core"
+  status: active
+  documentation: "README.md"
+

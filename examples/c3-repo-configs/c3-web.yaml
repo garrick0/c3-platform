@@ -1,0 +1,66 @@
+# C3 Repository Configuration
+# Repository: c3-web
+# Type: Application
+
+name: c3-web
+version: "1.0"
+type: application
+layer: 4
+description: "React web interface for C3 platform"
+
+dependencies: {}
+# Note: c3-web has no NPM dependencies on C3 packages
+# It communicates with c3-bff via HTTP at runtime
+
+exports:
+  # SPA doesn't export packages, but provides UI
+  pages:
+    - "/dashboard"
+    - "/module-analysis"
+    - "/architecture-validation"
+    - "/compliance"
+    - "/discovery"
+
+contracts:
+  - name: BFF API Client
+    version: "1.0.0"
+    stability: stable
+    description: "Consumes c3-bff REST API"
+    dependencies:
+      - service: c3-bff
+        endpoints:
+          - "POST /api/projection/analyze-modules"
+          - "GET /api/projection/analyses"
+          - "POST /api/compliance/validate"
+
+tooling:
+  buildCommand: "tsc && vite build"
+  testCommand: "vitest run"
+  devCommand: "vite"
+  
+  typescript:
+    version: "^5.3.3"
+    config: "tsconfig.json"
+  
+  testing:
+    framework: vitest
+    coverage: false
+    threshold: 0  # TODO: Add tests
+
+runtime:
+  type: spa
+  port: 5173
+  env:
+    - VITE_API_URL
+  proxies:
+    - path: "/api"
+      target: "http://localhost:3001"
+      changeOrigin: true
+  build-output: "dist/"
+
+metadata:
+  owner: "Platform Team"
+  team: "Frontend"
+  status: active
+  documentation: "README.md"
+
