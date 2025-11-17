@@ -22,9 +22,9 @@ echo "📦 Step 2: Linking dependencies in each package..."
 
 # Link parsing (depends on shared)
 if [ -d "../c3-parsing" ]; then
-  echo "  → c3-parsing: linking c3-shared..."
+  echo "  → c3-parsing: linking @garrick0/c3-shared..."
   cd ../c3-parsing
-  npm link c3-shared 2>/dev/null || true
+  npm link @garrick0/c3-shared 2>/dev/null || true
   cd ../c3-platform
 else
   echo "⚠️  Skipping c3-parsing (not found)"
@@ -32,9 +32,9 @@ fi
 
 # Link compliance (depends on shared + parsing)
 if [ -d "../c3-compliance" ]; then
-  echo "  → c3-compliance: linking c3-shared c3-parsing..."
+  echo "  → c3-compliance: linking @garrick0/c3-shared @garrick0/c3-parsing..."
   cd ../c3-compliance
-  npm link c3-shared c3-parsing 2>/dev/null || true
+  npm link @garrick0/c3-shared @garrick0/c3-parsing 2>/dev/null || true
   cd ../c3-platform
 else
   echo "⚠️  Skipping c3-compliance (not found)"
@@ -42,9 +42,9 @@ fi
 
 # Link projection (depends on shared + parsing)
 if [ -d "../c3-projection" ]; then
-  echo "  → c3-projection: linking c3-shared c3-parsing..."
+  echo "  → c3-projection: linking @garrick0/c3-shared @garrick0/c3-parsing..."
   cd ../c3-projection
-  npm link c3-shared c3-parsing 2>/dev/null || true
+  npm link @garrick0/c3-shared @garrick0/c3-parsing 2>/dev/null || true
   cd ../c3-platform
 else
   echo "⚠️  Skipping c3-projection (not found)"
@@ -52,9 +52,9 @@ fi
 
 # Link discovery (depends on shared + parsing + compliance)
 if [ -d "../c3-discovery" ]; then
-  echo "  → c3-discovery: linking c3-shared c3-parsing c3-compliance..."
+  echo "  → c3-discovery: linking @garrick0/c3-shared @garrick0/c3-parsing @garrick0/c3-compliance..."
   cd ../c3-discovery
-  npm link c3-shared c3-parsing c3-compliance 2>/dev/null || true
+  npm link @garrick0/c3-shared @garrick0/c3-parsing @garrick0/c3-compliance 2>/dev/null || true
   cd ../c3-platform
 else
   echo "⚠️  Skipping c3-discovery (not found)"
@@ -64,7 +64,7 @@ fi
 if [ -d "../c3-wiring" ]; then
   echo "  → c3-wiring: linking all contexts..."
   cd ../c3-wiring
-  npm link c3-shared c3-parsing c3-compliance c3-projection c3-discovery 2>/dev/null || true
+  npm link @garrick0/c3-shared @garrick0/c3-parsing @garrick0/c3-compliance @garrick0/c3-projection @garrick0/c3-discovery 2>/dev/null || true
   cd ../c3-platform
 else
   echo "⚠️  Skipping c3-wiring (not found)"
@@ -74,7 +74,7 @@ fi
 if [ -d "../c3-cli" ]; then
   echo "  → c3-cli: linking all packages..."
   cd ../c3-cli
-  npm link c3-shared c3-wiring c3-parsing c3-compliance c3-projection c3-discovery 2>/dev/null || true
+  npm link @garrick0/c3-shared @garrick0/c3-wiring @garrick0/c3-parsing @garrick0/c3-compliance @garrick0/c3-projection @garrick0/c3-discovery 2>/dev/null || true
   cd ../c3-platform
 else
   echo "⚠️  Skipping c3-cli (not found)"
@@ -83,7 +83,7 @@ fi
 if [ -d "../c3-bff" ]; then
   echo "  → c3-bff: linking all packages..."
   cd ../c3-bff
-  npm link c3-shared c3-wiring c3-parsing c3-compliance c3-projection c3-discovery 2>/dev/null || true
+  npm link @garrick0/c3-shared @garrick0/c3-wiring @garrick0/c3-parsing @garrick0/c3-compliance @garrick0/c3-projection @garrick0/c3-discovery 2>/dev/null || true
   cd ../c3-platform
 else
   echo "⚠️  Skipping c3-bff (not found)"
