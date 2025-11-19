@@ -65,8 +65,12 @@ jobs:
         run: |
           RELEASE_ID="${{ steps.build-matrix.outputs.release_id }}"
           mkdir -p releases/upcoming/${RELEASE_ID}
-          cp releases/upcoming/${RELEASE_ID}/plan.json \
-            releases/upcoming/${RELEASE_ID}/plan.json || true
+
+      - name: Upload release plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-plan-${{ steps.build-matrix.outputs.release_id }}
+          path: releases/upcoming/${{ steps.build-matrix.outputs.release_id }}/
 
       - name: Summary
         run: |
@@ -134,6 +138,12 @@ jobs:
       - name: Install dependencies
         run: |
           npm install @octokit/rest
+
+      - name: Download release plan
+        uses: actions/download-artifact@v4
+        with:
+          name: release-plan-${{ needs.plan.outputs.release_id }}
+          path: releases/upcoming/${{ needs.plan.outputs.release_id }}/
 
       - name: Generate changelog
         env:
