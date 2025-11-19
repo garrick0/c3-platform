@@ -10,8 +10,16 @@ logs/events/*.json
 logs/events/*.log
 !logs/events/.gitkeep
 
+# Phase 3 generated files
+releases/upcoming/*/
+!releases/upcoming/.gitkeep
+releases/history/*/
+!releases/history/.gitkeep
+
 # Temporary working documents
 .working/
 
-# Node modules (if any)
+# Node modules
 node_modules/
+package.json
+package-lock.json

@@ -1,0 +1,28 @@
+{
+  "release": {
+    "defaultType": "patch",
+    "allowedTypes": ["patch", "minor", "major", "canary"],
+    "requireApproval": false,
+    "dryRunByDefault": true,
+    "parallelReleases": false
+  },
+  "validation": {
+    "requireAllTestsPassing": true,
+    "requireCleanWorkingTree": true,
+    "checkDependencies": true
+  },
+  "changelog": {
+    "includeCommits": true,
+    "groupByType": true,
+    "showBreakingChanges": true,
+    "linkToCommits": true
+  },
+  "notifications": {
+    "onSuccess": [],
+    "onFailure": [],
+    "channels": {
+      "slack": "",
+      "email": ""
+    }
+  }
+}

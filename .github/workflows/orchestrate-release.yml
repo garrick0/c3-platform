@@ -1,0 +1,168 @@
+---
+name: Orchestrated Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - canary
+      repos:
+        description: 'Repos to release (comma-separated or "all")'
+        required: true
+        default: 'all'
+      dry_run:
+        description: 'Dry run (no actual releases)'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+      release_id: ${{ steps.build-matrix.outputs.release_id }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build release matrix
+        id: build-matrix
+        env:
+          RELEASE_TYPE: ${{ github.event.inputs.release_type }}
+          REPOS: ${{ github.event.inputs.repos }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          node scripts/build-release-matrix.js
+
+      - name: Validate release readiness
+        env:
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          node scripts/validate-release.js
+
+      - name: Create release directory
+        run: |
+          RELEASE_ID="${{ steps.build-matrix.outputs.release_id }}"
+          mkdir -p releases/upcoming/${RELEASE_ID}
+          cp releases/upcoming/${RELEASE_ID}/plan.json \
+            releases/upcoming/${RELEASE_ID}/plan.json || true
+
+      - name: Summary
+        run: |
+          RELEASE_ID="${{ steps.build-matrix.outputs.release_id }}"
+          echo "## Release Plan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat releases/upcoming/${RELEASE_ID}/summary.md \
+            >> $GITHUB_STEP_SUMMARY
+
+  release:
+    needs: plan
+    if: needs.plan.outputs.matrix != '[]'
+    strategy:
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+      max-parallel: 1
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Release ${{ matrix.repo }}
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          REPO: ${{ matrix.repo }}
+          RELEASE_TYPE: ${{ github.event.inputs.release_type }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "🔍 DRY RUN: Would release $REPO ($RELEASE_TYPE)"
+            echo "   Repository: garrick0/$REPO"
+            echo "   Release type: $RELEASE_TYPE"
+            echo "   Workflow: publish.yml"
+          else
+            echo "🚀 Releasing $REPO ($RELEASE_TYPE)"
+            gh workflow run publish.yml \
+              --repo garrick0/$REPO \
+              -f release_type=$RELEASE_TYPE
+            echo "✅ Release triggered for $REPO"
+          fi
+
+      - name: Wait for completion
+        if: github.event.inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          REPO: ${{ matrix.repo }}
+        run: |
+          echo "Waiting for $REPO release to complete..."
+          sleep 30
+          gh run watch --repo garrick0/$REPO --exit-status
+
+  finalize:
+    needs: [plan, release]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate changelog
+        env:
+          RELEASE_ID: ${{ needs.plan.outputs.release_id }}
+          RELEASE_TYPE: ${{ github.event.inputs.release_type }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          node scripts/generate-changelog.js
+
+      - name: Create release summary
+        env:
+          RELEASE_ID: ${{ needs.plan.outputs.release_id }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          node scripts/create-release-summary.js
+
+      - name: Archive release
+        env:
+          RELEASE_ID: ${{ needs.plan.outputs.release_id }}
+        run: |
+          mv releases/upcoming/$RELEASE_ID \
+            releases/history/$RELEASE_ID
+
+      - name: Final Summary
+        run: |
+          echo "## 🎉 Release Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "**Mode:** Dry Run (no actual releases)" \
+              >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Mode:** Production Release" >> $GITHUB_STEP_SUMMARY
+          fi
+          RELEASE_ID="${{ needs.plan.outputs.release_id }}"
+          echo "**Type:** ${{ github.event.inputs.release_type }}" \
+            >> $GITHUB_STEP_SUMMARY
+          echo "**Release ID:** ${RELEASE_ID}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat releases/history/${RELEASE_ID}/CHANGELOG.md \
+            >> $GITHUB_STEP_SUMMARY
