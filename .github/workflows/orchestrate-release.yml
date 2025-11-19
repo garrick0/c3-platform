@@ -42,6 +42,10 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install dependencies
+        run: |
+          npm install -g @octokit/rest
+
       - name: Build release matrix
         id: build-matrix
         env:
@@ -126,6 +130,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm install -g @octokit/rest
 
       - name: Generate changelog
         env:
