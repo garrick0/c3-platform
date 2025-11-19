@@ -1,0 +1,16 @@
+---
+name: Test Simple Workflow
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test step
+        run: |
+          echo "Test workflow running"
+          echo "This is a simple test"
