@@ -89,16 +89,19 @@ function findDownstreamRepos(repoName, config) {
 }
 
 function main() {
-  if (!REPO || !VERSION) {
-    console.error('Error: REPO and VERSION environment variables required');
+  if (!REPO) {
+    console.error('Error: REPO environment variable required');
     process.exit(1);
   }
 
   try {
     const repoName = extractRepoName(REPO);
-    console.log(`Updating dependency graph for ${repoName} → ${VERSION}`);
+    const version = VERSION || 'build-only';
 
-    const result = updateGraph(REPO, VERSION);
+    console.log(`Updating dependency graph for ${repoName}` +
+      (VERSION ? ` → ${VERSION}` : ' (build notification)'));
+
+    const result = updateGraph(REPO, version);
     if (!result) {
       process.exit(1);
     }
