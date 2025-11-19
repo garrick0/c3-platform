@@ -44,7 +44,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install -g @octokit/rest
+          npm install @octokit/rest
 
       - name: Build release matrix
         id: build-matrix
@@ -133,7 +133,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install -g @octokit/rest
+          npm install @octokit/rest
 
       - name: Generate changelog
         env:
