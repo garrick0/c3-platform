@@ -1,0 +1,122 @@
+{
+  "repositories": [
+    {
+      "name": "c3-shared",
+      "type": "library",
+      "layer": 0,
+      "dependencies": [],
+      "workflow": "publish.yml",
+      "scope": "@garrick0",
+      "path": "../c3-shared"
+    },
+    {
+      "name": "c3-parsing",
+      "type": "library",
+      "layer": 1,
+      "dependencies": ["c3-shared"],
+      "workflow": "publish.yml",
+      "scope": "@garrick0",
+      "path": "../c3-parsing"
+    },
+    {
+      "name": "c3-compliance",
+      "type": "library",
+      "layer": 2,
+      "dependencies": ["c3-shared", "c3-parsing"],
+      "workflow": "publish.yml",
+      "scope": "@garrick0",
+      "path": "../c3-compliance"
+    },
+    {
+      "name": "c3-projection",
+      "type": "library",
+      "layer": 2,
+      "dependencies": ["c3-shared", "c3-parsing"],
+      "workflow": "publish.yml",
+      "scope": "@garrick0",
+      "path": "../c3-projection"
+    },
+    {
+      "name": "c3-discovery",
+      "type": "library",
+      "layer": 2,
+      "dependencies": ["c3-shared", "c3-parsing", "c3-compliance"],
+      "workflow": "publish.yml",
+      "scope": "@garrick0",
+      "path": "../c3-discovery"
+    },
+    {
+      "name": "c3-wiring",
+      "type": "library",
+      "layer": 3,
+      "dependencies": ["c3-shared", "c3-parsing", "c3-compliance", "c3-projection", "c3-discovery"],
+      "workflow": "publish.yml",
+      "scope": "@garrick0",
+      "path": "../c3-wiring"
+    },
+    {
+      "name": "c3-cli",
+      "type": "application",
+      "layer": 4,
+      "dependencies": ["c3-wiring"],
+      "workflow": "ci.yml",
+      "scope": "@garrick0",
+      "path": "../c3-cli"
+    },
+    {
+      "name": "c3-bff",
+      "type": "application",
+      "layer": 4,
+      "dependencies": ["c3-wiring"],
+      "workflow": "ci.yml",
+      "scope": "@garrick0",
+      "path": "../c3-bff",
+      "runtime": {
+        "type": "node",
+        "port": 3001
+      }
+    },
+    {
+      "name": "c3-web",
+      "type": "application",
+      "layer": 4,
+      "dependencies": [],
+      "workflow": "ci.yml",
+      "scope": "@garrick0",
+      "path": "../c3-web",
+      "runtime": {
+        "type": "vite",
+        "port": 5173
+      }
+    }
+  ],
+  "orchestration": {
+    "build_order": [
+      "c3-shared",
+      "c3-parsing",
+      "c3-compliance",
+      "c3-projection",
+      "c3-discovery",
+      "c3-wiring",
+      "c3-cli",
+      "c3-bff",
+      "c3-web"
+    ],
+    "parallel_groups": [
+      ["c3-shared"],
+      ["c3-parsing"],
+      ["c3-compliance", "c3-projection"],
+      ["c3-discovery"],
+      ["c3-wiring"],
+      ["c3-cli", "c3-bff", "c3-web"]
+    ],
+    "notification_channels": {
+      "slack": "",
+      "email": ""
+    }
+  },
+  "github": {
+    "org": "garrick0",
+    "registry": "https://npm.pkg.github.com"
+  }
+}

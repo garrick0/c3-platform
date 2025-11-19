@@ -1,0 +1,51 @@
+---
+# Example: Add to c3-bff/.github/workflows/ci.yml (and c3-web, c3-cli)
+# This shows the ADDED lines for Phase 2
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: true
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      # ... existing test and build steps ...
+
+      # ===== PHASE 2: ADD THIS STEP (only on push to main) =====
+      - name: Notify orchestrator
+        if: success() && github.event_name == 'push'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: garrick0/c3-platform
+          event-type: dependency_updated
+          client-payload: |
+            {
+              "repo": "${{ github.repository }}",
+              "sha": "${{ github.sha }}",
+              "workflow_run_id": "${{ github.run_id }}",
+              "build_successful": "true"
+            }
+      # ===== END PHASE 2 ADDITION =====
+
+      # ===== PHASE 2: ADD THIS STEP (on failure) =====
+      - name: Notify orchestrator of failure
+        if: failure() && github.event_name == 'push'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: garrick0/c3-platform
+          event-type: build_failed
+          client-payload: |
+            {
+              "repo": "${{ github.repository }}",
+              "sha": "${{ github.sha }}",
+              "workflow_run_id": "${{ github.run_id }}"
+            }
+      # ===== END PHASE 2 ADDITION =====

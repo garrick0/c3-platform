@@ -1,0 +1,19 @@
+{
+  "lastUpdated": "2025-11-19T20:31:47.358Z",
+  "versions": {
+    "c3-shared": {
+      "version": "1.0.0-test",
+      "updated": "2025-11-19T20:31:47.358Z",
+      "layer": 0,
+      "type": "library"
+    }
+  },
+  "updates": [
+    {
+      "timestamp": "2025-11-19T20:31:47.358Z",
+      "repo": "c3-shared",
+      "version": "1.0.0-test",
+      "layer": 0
+    }
+  ]
+}

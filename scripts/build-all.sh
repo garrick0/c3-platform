@@ -4,18 +4,28 @@ set -e
 
 echo "🏗️  Building all C3 packages..."
 
-# Build in dependency order
-repos=(
-  "c3-shared"
-  "c3-parsing"
-  "c3-compliance"
-  "c3-projection"
-  "c3-discovery"
-  "c3-wiring"
-  "c3-cli"
-  "c3-bff"
-  "c3-web"
-)
+# Get script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CONFIG_FILE="$SCRIPT_DIR/../config/repos.json"
+
+# Check if jq is installed
+if ! command -v jq &> /dev/null; then
+    echo "❌ jq is not installed. Please install jq to use this script."
+    echo "   On macOS: brew install jq"
+    echo "   On Ubuntu: apt-get install jq"
+    exit 1
+fi
+
+# Load build order from config
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "❌ Configuration file not found: $CONFIG_FILE"
+    exit 1
+fi
+
+# Extract build order from JSON
+mapfile -t repos < <(jq -r '.orchestration.build_order[]' "$CONFIG_FILE")
+
+echo "📋 Build order loaded from config: ${#repos[@]} repositories"
 
 failed=()
 

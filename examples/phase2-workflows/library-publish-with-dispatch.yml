@@ -1,0 +1,62 @@
+---
+# Example: Add to c3-shared/.github/workflows/publish.yml (and all libraries)
+# This shows the ADDED lines for Phase 2
+
+name: Publish Package
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        type: choice
+        options: [patch, minor, major, canary]
+
+jobs:
+  publish-dev:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      # ... existing build and publish steps ...
+
+      # ===== PHASE 2: ADD THIS STEP =====
+      - name: Notify orchestrator
+        if: success()
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: garrick0/c3-platform
+          event-type: dependency_updated
+          client-payload: |
+            {
+              "repo": "${{ github.repository }}",
+              "version": "${{ steps.version.outputs.version }}",
+              "sha": "${{ github.sha }}",
+              "workflow_run_id": "${{ github.run_id }}"
+            }
+      # ===== END PHASE 2 ADDITION =====
+
+  publish-release:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      # ... existing release steps ...
+
+      # ===== PHASE 2: ADD THIS STEP =====
+      - name: Notify orchestrator
+        if: success()
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: garrick0/c3-platform
+          event-type: dependency_updated
+          client-payload: |
+            {
+              "repo": "${{ github.repository }}",
+              "version": "${{ steps.version.outputs.new_version }}",
+              "sha": "${{ github.sha }}",
+              "workflow_run_id": "${{ github.run_id }}",
+              "release_type": "${{ github.event.inputs.release_type }}"
+            }
+      # ===== END PHASE 2 ADDITION =====

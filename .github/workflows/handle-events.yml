@@ -1,0 +1,65 @@
+---
+name: Handle Repository Events
+
+on:
+  repository_dispatch:
+    types:
+      - dependency_updated
+      - build_failed
+      - release_requested
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  handle-event:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Log event details
+        run: |
+          echo "Event Type: ${{ github.event.action }}"
+          echo "Payload:"
+          echo '${{ toJSON(github.event.client_payload) }}' | jq .
+
+      - name: Process event
+        env:
+          EVENT_TYPE: ${{ github.event.action }}
+          EVENT_PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+        run: |
+          node scripts/process-event.js
+
+      - name: Update dependency graph
+        if: github.event.action == 'dependency_updated'
+        env:
+          REPO: ${{ github.event.client_payload.repo }}
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          node scripts/update-dependency-graph.js
+
+      - name: Trigger downstream builds
+        if: github.event.action == 'dependency_updated'
+        env:
+          REPO: ${{ github.event.client_payload.repo }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/trigger-downstream.js
+
+      - name: Summary
+        run: |
+          echo "## Event Processed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Type:** ${{ github.event.action }}" \
+            >> $GITHUB_STEP_SUMMARY
+          REPO="${{ github.event.client_payload.repo }}"
+          VERSION="${{ github.event.client_payload.version }}"
+          echo "- **Repository:** ${REPO}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${VERSION}" >> $GITHUB_STEP_SUMMARY

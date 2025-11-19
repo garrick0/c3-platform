@@ -1,0 +1,57 @@
+---
+name: Collect CI/CD Metrics
+
+on:
+  workflow_dispatch: true
+  repository_dispatch:
+    types: [workflow_completed]
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Collect metrics from GitHub API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/collect-metrics.js
+
+      - name: Store metrics
+        run: |
+          # Create timestamped metrics file
+          TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)
+          cp metrics/latest.json \
+            metrics/history/metrics-${TIMESTAMP}.json
+
+      - name: Generate reports
+        run: |
+          node scripts/generate-metrics-report.js
+
+      - name: Upload metrics artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-cd-metrics-${{ github.run_id }}
+          path: |
+            metrics/latest.json
+            metrics/report.md
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "## CI/CD Metrics Collected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat metrics/report.md >> $GITHUB_STEP_SUMMARY

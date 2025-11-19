@@ -1,14 +1,35 @@
 #!/bin/bash
-# Link all C3 packages for local development
+# Link all C3 packages for local development (using repos.json)
 set -e
 
 echo "🔗 Linking all C3 packages for local development..."
 
-# First, make all packages available globally
+# Get script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CONFIG_FILE="$SCRIPT_DIR/../config/repos.json"
+
+# Check if jq is installed
+if ! command -v jq &> /dev/null; then
+    echo "❌ jq is not installed. Please install jq to use this script."
+    echo "   On macOS: brew install jq"
+    echo "   On Ubuntu: apt-get install jq"
+    exit 1
+fi
+
+# Load config
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "❌ Configuration file not found: $CONFIG_FILE"
+    exit 1
+fi
+
+# Step 1: Make all library packages available globally
 echo ""
 echo "📦 Step 1: Making all packages available globally..."
 
-for repo in c3-shared c3-parsing c3-compliance c3-projection c3-discovery c3-wiring; do
+# Get all library repos
+libraries=$(jq -r '.repositories[] | select(.type == "library") | .name' "$CONFIG_FILE")
+
+for repo in $libraries; do
   if [ -d "../$repo" ]; then
     echo "  → Linking $repo globally..."
     cd ../$repo
@@ -17,77 +38,38 @@ for repo in c3-shared c3-parsing c3-compliance c3-projection c3-discovery c3-wir
   fi
 done
 
+# Step 2: Link dependencies in each package
 echo ""
 echo "📦 Step 2: Linking dependencies in each package..."
 
-# Link parsing (depends on shared)
-if [ -d "../c3-parsing" ]; then
-  echo "  → c3-parsing: linking @garrick0/c3-shared..."
-  cd ../c3-parsing
-  npm link @garrick0/c3-shared 2>/dev/null || true
-  cd ../c3-platform
-else
-  echo "⚠️  Skipping c3-parsing (not found)"
-fi
+# Process each repo in build order
+mapfile -t repos < <(jq -r '.orchestration.build_order[]' "$CONFIG_FILE")
 
-# Link compliance (depends on shared + parsing)
-if [ -d "../c3-compliance" ]; then
-  echo "  → c3-compliance: linking @garrick0/c3-shared @garrick0/c3-parsing..."
-  cd ../c3-compliance
-  npm link @garrick0/c3-shared @garrick0/c3-parsing 2>/dev/null || true
-  cd ../c3-platform
-else
-  echo "⚠️  Skipping c3-compliance (not found)"
-fi
+for repo in "${repos[@]}"; do
+  if [ -d "../$repo" ]; then
+    # Get dependencies for this repo
+    deps=$(jq -r --arg repo "$repo" '.repositories[] | select(.name == $repo) | .dependencies[]?' "$CONFIG_FILE")
 
-# Link projection (depends on shared + parsing)
-if [ -d "../c3-projection" ]; then
-  echo "  → c3-projection: linking @garrick0/c3-shared @garrick0/c3-parsing..."
-  cd ../c3-projection
-  npm link @garrick0/c3-shared @garrick0/c3-parsing 2>/dev/null || true
-  cd ../c3-platform
-else
-  echo "⚠️  Skipping c3-projection (not found)"
-fi
+    if [ -n "$deps" ]; then
+      echo "  → $repo: linking dependencies..."
 
-# Link discovery (depends on shared + parsing + compliance)
-if [ -d "../c3-discovery" ]; then
-  echo "  → c3-discovery: linking @garrick0/c3-shared @garrick0/c3-parsing @garrick0/c3-compliance..."
-  cd ../c3-discovery
-  npm link @garrick0/c3-shared @garrick0/c3-parsing @garrick0/c3-compliance 2>/dev/null || true
-  cd ../c3-platform
-else
-  echo "⚠️  Skipping c3-discovery (not found)"
-fi
+      # Get the scope
+      scope=$(jq -r --arg repo "$repo" '.repositories[] | select(.name == $repo) | .scope' "$CONFIG_FILE")
 
-# Link wiring (depends on all contexts)
-if [ -d "../c3-wiring" ]; then
-  echo "  → c3-wiring: linking all contexts..."
-  cd ../c3-wiring
-  npm link @garrick0/c3-shared @garrick0/c3-parsing @garrick0/c3-compliance @garrick0/c3-projection @garrick0/c3-discovery 2>/dev/null || true
-  cd ../c3-platform
-else
-  echo "⚠️  Skipping c3-wiring (not found)"
-fi
+      cd ../$repo
 
-# Link apps
-if [ -d "../c3-cli" ]; then
-  echo "  → c3-cli: linking all packages..."
-  cd ../c3-cli
-  npm link @garrick0/c3-shared @garrick0/c3-wiring @garrick0/c3-parsing @garrick0/c3-compliance @garrick0/c3-projection @garrick0/c3-discovery 2>/dev/null || true
-  cd ../c3-platform
-else
-  echo "⚠️  Skipping c3-cli (not found)"
-fi
+      # Link each dependency
+      for dep in $deps; do
+        echo "      - @${scope}/${dep}"
+        npm link "@${scope}/${dep}" 2>/dev/null || true
+      done
 
-if [ -d "../c3-bff" ]; then
-  echo "  → c3-bff: linking all packages..."
-  cd ../c3-bff
-  npm link @garrick0/c3-shared @garrick0/c3-wiring @garrick0/c3-parsing @garrick0/c3-compliance @garrick0/c3-projection @garrick0/c3-discovery 2>/dev/null || true
-  cd ../c3-platform
-else
-  echo "⚠️  Skipping c3-bff (not found)"
-fi
+      cd ../c3-platform
+    fi
+  else
+    echo "⚠️  Skipping $repo (not found)"
+  fi
+done
 
 echo ""
 echo "✅ All packages linked!"

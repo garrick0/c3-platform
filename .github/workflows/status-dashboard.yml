@@ -1,0 +1,73 @@
+---
+name: CI/CD Status Dashboard
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Every 15 minutes
+  workflow_dispatch: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  collect-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm install -g @octokit/rest
+
+      - name: Collect workflow status
+        id: collect
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/collect-status.js
+
+      - name: Generate status page
+        run: |
+          node scripts/generate-dashboard.js
+
+      - name: Commit status update
+        run: |
+          git config --local user.email \
+            "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # Create status branch if it doesn't exist
+          git fetch origin status:status 2>/dev/null || \
+            git checkout -b status
+          git checkout status
+
+          # Copy generated files
+          mkdir -p dashboard
+          cp metrics/latest.json dashboard/
+          cp metrics/dashboard.html dashboard/index.html
+
+          # Commit changes
+          git add dashboard/
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "Update CI/CD status dashboard - ${TIMESTAMP}"
+
+          # Push to status branch
+          git push origin status
+
+      - name: Summary
+        run: |
+          REPO_URL="https://github.com/${{ github.repository }}"
+          echo "## CI/CD Status Dashboard Updated" \
+            >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View the dashboard at:" >> $GITHUB_STEP_SUMMARY
+          echo "${REPO_URL}/tree/status/dashboard" \
+            >> $GITHUB_STEP_SUMMARY

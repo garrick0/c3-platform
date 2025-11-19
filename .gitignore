@@ -1,0 +1,17 @@
+# Phase 1 & 2 generated files
+metrics/*.json
+metrics/*.html
+metrics/*.md
+metrics/history/*
+!metrics/.gitkeep
+!metrics/history/.gitkeep
+
+logs/events/*.json
+logs/events/*.log
+!logs/events/.gitkeep
+
+# Temporary working documents
+.working/
+
+# Node modules (if any)
+node_modules/
