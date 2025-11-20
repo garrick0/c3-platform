@@ -108,3 +108,14 @@ If you're researching the migration, start with:
 ---
 
 **These docs are historical only. For current docs, see [c3-monorepo](../../c3-monorepo/).**
+
+
+### ci-examples/ (6 files)
+Example GitHub Actions workflows for polyrepo CI/CD:
+- **README.md** - Comprehensive setup guide
+- **publish-package.yml** - Library publishing workflow
+- **simplified-app-ci.yml** - Application CI workflow
+- **orchestrate-release.yml** - Cross-repo orchestration
+- **version-bump.yml** - Version management
+
+These workflows demonstrate the complexity of polyrepo CI/CD coordination.
